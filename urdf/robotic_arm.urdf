@@ -1,0 +1,792 @@
+<?xml version="1.0"?>
+<!--
+  URDF for the 27-DOF EEG Controlled Robotic Arm Project.
+  - This model is kinematically representative of the project's robotic arm.
+  - It uses simple cylinder and box geometries for computational efficiency in RL simulation.
+  - All lengths are in meters, and angles are in radians.
+  - The arm starts in a "pledge-taking" pose: stretched along the X-axis, palm down.
+  - Total DOFs = 2(shoulder) + 2(elbow) + 2(wrist) + 1(palm) + 4*(4 fingers) + 4(thumb) = 27.
+-->
+<robot name="eeg_robotic_arm">
+
+  <!-- ======================= -->
+  <!-- ====   MATERIALS   ==== -->
+  <!-- ======================= -->
+  
+  <!-- Define some colors for visualization -->
+  <material name="dark_grey">
+    <color rgba="0.2 0.2 0.2 1.0"/>
+  </material>
+  <material name="light_grey">
+    <color rgba="0.8 0.8 0.8 1.0"/>
+  </material>
+  <material name="yellow">
+    <color rgba="1.0 0.85 0.1 1.0"/>
+  </material>
+  <material name="red">
+    <color rgba="0.9 0.2 0.2 1.0"/>
+  </material>
+
+  <!-- ======================= -->
+  <!-- ====   MATERIALS   ==== -->
+  <!-- ======================= -->
+
+  <!-- ======================= -->
+  <!-- ====   BASE LINK   ==== -->
+  <!-- ======================= -->
+  
+  <!-- The world frame and the base of the robot are fixed. -->
+  <link name="base_link"> <!-- Stand for Robotic Arm -->
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <visual>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <box size="0.1 0.1 0.01"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <visual>
+      <origin xyz="0.0 0.0 0.25" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <cylinder length="0.5" radius="0.01"/>
+      </geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <visual>
+      <origin xyz="0.0 0.0 0.5" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <sphere radius="0.03"/>
+      </geometry>
+      <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- ======================= -->
+  <!-- ====   BASE LINK   ==== -->
+  <!-- ======================= -->
+
+  <!-- ======================= -->
+  <!-- ====     ARM       ==== -->
+  <!-- ======================= -->
+
+  <!-- SHOULDER: 2-DOF (Pan and Tilt in a single link) -->
+
+  <!-- Shoulder Pan Joint (Horizontal Rotation) -->
+  <joint name="shoulder_pan_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="shoulder_pan_link"/>
+    <origin xyz="0 0 0.5" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/> <!-- Rotation around Z-axis -->
+    <limit lower="-1.57" upper="1.57" effort="100" velocity="1.0"/>
+  </joint>
+  <link name="shoulder_pan_link"></link>
+
+  <!-- Shoulder Tilt Joint (Vertical Rotation) -->
+  <joint name="shoulder_tilt_joint" type="revolute">
+    <parent link="shoulder_pan_link"/>
+    <child link="upper_arm_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/> <!-- Rotation around Y-axis -->
+    <limit lower="-1.57" upper="0.94" effort="100" velocity="1.0"/>
+  </joint>
+  <link name="upper_arm_link">
+    <visual>
+        <geometry>
+            <cylinder length="0.2" radius="0.02"/>
+        </geometry>
+        <origin xyz="0.1 0 0" rpy="0 1.57 0"/>
+        <material name="light_grey"/>
+    </visual>
+    <visual>
+        <geometry>
+            <sphere radius="0.02"/>
+        </geometry>
+        <origin xyz="0.2 0 0" rpy="0 0 0"/>
+        <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- ======================= -->
+  <!-- ====     ARM       ==== -->
+  <!-- ======================= -->
+
+  <!-- ======================= -->
+  <!-- ====     ELBOW     ==== -->
+  <!-- ======================= -->
+
+  <!-- ELBOW: 2-DOF (Flexion and Rotation) -->
+
+  <!-- Elbow Flexion Joint -->
+  <joint name="elbow_flex_joint" type="revolute">
+    <parent link="upper_arm_link"/>
+    <child link="elbow_rot_link"/>
+    <origin xyz="0.22 0 0" rpy="0 0 0"/> <!-- Place at the end of the upper arm -->
+    <axis xyz="0 -1 0"/> <!-- Bending around Y-axis -->
+    <limit lower="0" upper="2.6" effort="100" velocity="1.0"/>
+  </joint>
+  <link name="elbow_rot_link"></link>
+
+  <!-- Elbow Rotation Joint (Pronation/Supination) -->
+  <joint name="elbow_rot_joint" type="revolute">
+    <parent link="elbow_rot_link"/>
+    <child link="forearm_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/> <!-- Rotation along the length of the forearm (X-axis) -->
+    <limit lower="-1.57" upper="1.57" effort="50" velocity="1.5"/>
+  </joint>
+
+  <link name="forearm_link">
+    <visual>
+        <geometry>
+            <cylinder length="0.18" radius="0.02"/>
+        </geometry>
+        <origin xyz="0.09 0 0" rpy="0 1.57 0"/>
+        <material name="light_grey"/>
+    </visual>
+    <visual>
+            <geometry>
+                    <sphere radius="0.02"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <material name="yellow"/>
+    </visual>
+    <visual>
+            <geometry>
+                    <sphere radius="0.02"/>
+            </geometry>
+            <origin xyz="0.18 0 0" rpy="0 0 0"/>
+            <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- ======================= -->
+  <!-- ====     ELBOW     ==== -->
+  <!-- ======================= -->
+
+  <!-- ======================= -->
+  <!-- ====     WRIST     ==== -->
+  <!-- ======================= -->
+
+  <!-- Wrist Flexion Joint (Vertical Movement) -->
+  <joint name="wrist_flex_joint" type="revolute">
+    <parent link="forearm_link"/>
+    <child link="wrist_abd_link"/>
+    <origin xyz="0.19 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/> <!-- Rotation around Y-axis -->
+    <limit lower="-1.0" upper="1.0" effort="30" velocity="1.0"/>
+  </joint>
+  <link name="wrist_abd_link"></link>
+
+  <!-- Wrist Abduction/Adduction Joint (Horizontal Movement) -->
+  <joint name="wrist_abd_joint" type="revolute">
+    <parent link="wrist_abd_link"/>
+    <child link="hand_base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/> <!-- Rotation around Z-axis -->
+    <limit lower="-0.5" upper="0.5" effort="30" velocity="1.0"/>
+  </joint>
+  <link name="hand_base_link">
+    <visual>
+        <geometry>
+            <box size="0.085 0.075 0.02"/>
+        </geometry>
+        <origin xyz="0.045 0 0" rpy="0 0 0"/>
+        <material name="light_grey"/>
+    </visual>
+    <visual>
+        <geometry>
+            <sphere radius="0.02"/>
+        </geometry>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- ======================= -->
+  <!-- ====     WRIST     ==== -->
+  <!-- ======================= -->
+
+  <!-- ======================= -->
+  <!-- =====    PALM     ===== -->
+  <!-- ======================= -->
+
+  <!-- PALM FLEXION (for pinky/ring finger block) -->
+  <joint name="palm_flex_joint" type="revolute">
+      <parent link="hand_base_link"/>
+      <child link="pinky_ring_meta_base"/>
+      <origin xyz="0.01 -0.002 0" rpy="0 0 0"/> <!-- Positioned towards pinky side -->
+      <axis xyz="-1 0 0"/>
+      <limit lower="0" upper="0.25" effort="10" velocity="1.0"/>
+  </joint>
+  <link name="pinky_ring_meta_base"></link>
+
+  <!-- ======================= -->
+  <!-- =====    PALM     ===== -->
+  <!-- ======================= -->
+
+  <!-- ======================= -->
+  <!-- =====   FINGERS   ===== -->
+  <!-- ======================= -->
+  
+  <!-- INDEX FINGER (4-DOF) -->
+  <!-- Joint 1: Abduction/Adduction -->
+  <joint name="index_abd_joint" type="revolute">
+    <parent link="hand_base_link"/>
+    <child link="index_mcp_link"/>
+    <origin xyz="0.077 -0.029 0" rpy="0 0 0"/> <!-- Position of index finger base -->
+    <axis xyz="0 0 1"/> <!-- Z-axis for side-to-side movement -->
+    <limit lower="-0.2" upper="0.2" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="index_mcp_link">
+    <visual>
+      <geometry><cylinder length="0.025" radius="0.005"/></geometry>
+      <origin xyz="0.001 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.0135 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 2: Metacarpophalangeal (MCP) Flexion -->
+  <joint name="index_mcp_flex_joint" type="revolute">
+    <parent link="index_mcp_link"/>
+    <child link="index_prox_link"/>
+    <origin xyz="0.02 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.2" upper="1.57" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="index_prox_link">
+    <visual>
+      <geometry><cylinder length="0.04" radius="0.005"/></geometry>
+      <origin xyz="0.02 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.04 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+  
+  <!-- Joint 3: Proximal Interphalangeal (PIP) Flexion -->
+  <joint name="index_pip_joint" type="revolute">
+    <parent link="index_prox_link"/>
+    <child link="index_mid_link"/>
+    <origin xyz="0.045 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="1.8" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="index_mid_link">
+    <visual>
+      <geometry><cylinder length="0.025" radius="0.005"/></geometry>
+      <origin xyz="0.0125 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.025 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 4: Distal Interphalangeal (DIP) Flexion -->
+  <joint name="index_dip_joint" type="revolute">
+    <parent link="index_mid_link"/>
+    <child link="index_dist_link"/>
+    <origin xyz="0.03 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="1.57" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="index_dist_link">
+    <visual>
+      <geometry><cylinder length="0.02" radius="0.005"/></geometry>
+      <origin xyz="0.01 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.02 0 0" rpy="0 0 0"/>
+      <material name="red"/>
+    </visual>
+  </link>
+
+  <!-- MIDDLE FINGER (4-DOF) -->
+  <!-- Joint 1: Abduction/Adduction -->
+  <joint name="middle_abd_joint" type="revolute">
+    <parent link="hand_base_link"/>
+    <child link="middle_mcp_link"/>
+    <origin xyz="0.077 -0.0084 0" rpy="0 0 0"/> <!-- Position of middle finger base -->
+    <axis xyz="0 0 1"/> <!-- Z-axis for side-to-side movement -->
+    <limit lower="-0.2" upper="0.2" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="middle_mcp_link">
+    <visual>
+      <geometry><cylinder length="0.025" radius="0.005"/></geometry>
+      <origin xyz="0.001 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.0135 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 2: Metacarpophalangeal (MCP) Flexion -->
+  <joint name="middle_mcp_flex_joint" type="revolute">
+    <parent link="middle_mcp_link"/>
+    <child link="middle_prox_link"/>
+    <origin xyz="0.02 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.2" upper="1.57" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="middle_prox_link">
+    <visual>
+      <geometry><cylinder length="0.055" radius="0.005"/></geometry>
+      <origin xyz="0.0275 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.055 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 3: Proximal Interphalangeal (PIP) Flexion -->
+  <joint name="middle_pip_joint" type="revolute">
+    <parent link="middle_prox_link"/>
+    <child link="middle_mid_link"/>
+    <origin xyz="0.06 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="1.8" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="middle_mid_link">
+    <visual>
+      <geometry><cylinder length="0.025" radius="0.005"/></geometry>
+      <origin xyz="0.0125 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.025 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 4: Distal Interphalangeal (DIP) Flexion -->
+  <joint name="middle_dip_joint" type="revolute">
+    <parent link="middle_mid_link"/>
+    <child link="middle_dist_link"/>
+    <origin xyz="0.03 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="1.57" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="middle_dist_link">
+    <visual>
+      <geometry><cylinder length="0.02" radius="0.005"/></geometry>
+      <origin xyz="0.01 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.02 0 0" rpy="0 0 0"/>
+      <material name="red"/>
+    </visual>
+  </link>
+
+  <!-- RING FINGER (4-DOF) - Parent is the palm_flex block -->
+  <!-- Joint 1: Abduction/Adduction -->
+  <joint name="ring_abd_joint" type="revolute">
+    <parent link="pinky_ring_meta_base"/>
+    <child link="ring_mcp_link"/>
+    <origin xyz="0.0675 0.012 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.2" upper="0.2" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="ring_mcp_link">
+    <visual>
+      <geometry><cylinder length="0.025" radius="0.005"/></geometry>
+      <origin xyz="0.001 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.0135 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 2: Metacarpophalangeal (MCP) Flexion -->
+  <joint name="ring_mcp_flex_joint" type="revolute">
+    <parent link="ring_mcp_link"/>
+    <child link="ring_prox_link"/>
+    <origin xyz="0.02 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.2" upper="1.57" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="ring_prox_link">
+    <visual>
+      <geometry><cylinder length="0.04" radius="0.005"/></geometry>
+      <origin xyz="0.02 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.04 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 3: Proximal Interphalangeal (PIP) Flexion -->
+  <joint name="ring_pip_joint" type="revolute">
+    <parent link="ring_prox_link"/>
+    <child link="ring_mid_link"/>
+    <origin xyz="0.045 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="1.8" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="ring_mid_link">
+    <visual>
+      <geometry><cylinder length="0.025" radius="0.005"/></geometry>
+      <origin xyz="0.0125 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.025 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 4: Distal Interphalangeal (DIP) Flexion -->
+  <joint name="ring_dip_joint" type="revolute">
+    <parent link="ring_mid_link"/>
+    <child link="ring_dist_link"/>
+    <origin xyz="0.03 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="1.57" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="ring_dist_link">
+    <visual>
+      <geometry><cylinder length="0.02" radius="0.005"/></geometry>
+      <origin xyz="0.01 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.02 0 0" rpy="0 0 0"/>
+      <material name="red"/>
+    </visual>
+  </link>
+
+  <!-- PINKY FINGER (4-DOF) - Parent is the palm_flex block -->
+  <!-- Joint 1: Abduction/Adduction -->
+  <joint name="pinky_abd_joint" type="revolute">
+    <parent link="pinky_ring_meta_base"/>
+    <child link="pinky_mcp_link"/>
+    <origin xyz="0.0675 0.031 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.2" upper="0.2" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="pinky_mcp_link">
+    <visual>
+      <geometry><cylinder length="0.025" radius="0.005"/></geometry>
+      <origin xyz="0.001 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.0135 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 2: Metacarpophalangeal (MCP) Flexion -->
+  <joint name="pinky_mcp_flex_joint" type="revolute">
+    <parent link="pinky_mcp_link"/>
+    <child link="pinky_prox_link"/>
+    <origin xyz="0.02 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.2" upper="1.57" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="pinky_prox_link">
+    <visual>
+      <geometry><cylinder length="0.025" radius="0.005"/></geometry>
+      <origin xyz="0.013 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.025 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 3: Proximal Interphalangeal (PIP) Flexion -->
+  <joint name="pinky_pip_joint" type="revolute">
+    <parent link="pinky_prox_link"/>
+    <child link="pinky_mid_link"/>
+    <origin xyz="0.03 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="1.8" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="pinky_mid_link">
+    <visual>
+      <geometry><cylinder length="0.02" radius="0.005"/></geometry>
+      <origin xyz="0.01 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.02 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 4: Distal Interphalangeal (DIP) Flexion -->
+  <joint name="pinky_dip_joint" type="revolute">
+    <parent link="pinky_mid_link"/>
+    <child link="pinky_dist_link"/>
+    <origin xyz="0.025 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="1.57" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="pinky_dist_link">
+    <visual>
+      <geometry><cylinder length="0.02" radius="0.005"/></geometry>
+      <origin xyz="0.01 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.005"/>
+      </geometry>
+      <origin xyz="0.02 0 0" rpy="0 0 0"/>
+      <material name="red"/>
+    </visual>
+  </link>
+
+  <!-- ======================= -->
+  <!-- ====    FINGERS    ==== -->
+  <!-- ======================= -->
+
+  <!-- ======================= -->
+  <!-- ====     THUMB     ==== -->
+  <!-- ======================= -->
+  
+  <!-- Joint 1a: Thumb Opposition/Reposition (Rotation around Y axis) -->
+  <joint name="thumb_opp_joint" type="revolute">
+    <parent link="hand_base_link"/>
+    <child link="thumb_opp_z_link"/>
+    <origin xyz="0.015 -0.035 0" rpy="1.5 0 -0.5"/>
+    <axis xyz="0 1 0"/> <!-- Rotation around local Y axis -->
+    <limit lower="-0.5" upper="0.25" effort="10" velocity="1.0"/>
+  </joint>
+  <link name="thumb_opp_z_link"/>
+
+  <!-- Joint 1b: Thumb Rotation around Z axis -->
+  <joint name="thumb_z_rot_joint" type="revolute">
+    <parent link="thumb_opp_z_link"/>
+    <child link="thumb_mcp_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/> <!-- Rotation around local Z axis -->
+    <limit lower="-0.75" upper="0.15" effort="10" velocity="1.0"/>
+  </joint>
+  <link name="thumb_mcp_link">
+    <visual>
+        <geometry><cylinder length="0.05" radius="0.006"/></geometry>
+        <origin xyz="0.025 0 0" rpy="0 1.57 0"/>
+        <material name="light_grey"/>
+    </visual>
+    <visual>
+            <geometry>
+                    <sphere radius="0.006"/>
+            </geometry>
+            <origin xyz="0.05 0 0" rpy="0 0 0"/>
+            <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 2: Thumb MCP Flexion -->
+  <joint name="thumb_mcp_flex_joint" type="revolute">
+    <parent link="thumb_mcp_link"/>
+    <child link="thumb_prox_link"/>
+    <origin xyz="0.057 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="1.4" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="thumb_prox_link">
+    <visual>
+      <geometry><cylinder length="0.035" radius="0.006"/></geometry>
+      <origin xyz="0.018 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+        <geometry>
+            <sphere radius="0.006"/>
+        </geometry>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <material name="yellow"/>
+    </visual>
+    <visual>
+        <geometry>
+            <sphere radius="0.006"/>
+        </geometry>
+        <origin xyz="0.037 0 0" rpy="0 0 0"/>
+        <material name="yellow"/>
+    </visual>
+  </link>
+
+  <!-- Joint 3: Thumb IP Flexion -->
+  <joint name="thumb_ip_joint" type="revolute">
+    <parent link="thumb_prox_link"/>
+    <child link="thumb_dist_link"/>
+    <origin xyz="0.043 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.7" upper="1.57" effort="5" velocity="1.0"/>
+  </joint>
+  <link name="thumb_dist_link">
+    <visual>
+      <geometry><cylinder length="0.025" radius="0.006"/></geometry>
+      <origin xyz="0.0125 0 0" rpy="0 1.57 0"/>
+      <material name="light_grey"/>
+    </visual>
+    <visual>
+        <geometry>
+            <sphere radius="0.006"/>
+        </geometry>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <material name="yellow"/>
+    </visual>
+    <visual>
+      <geometry>
+        <sphere radius="0.006"/>
+      </geometry>
+      <origin xyz="0.025 0 0" rpy="0 0 0"/>
+      <material name="red"/>
+    </visual>
+  </link>
+
+  <!-- ======================= -->
+  <!-- ====     THUMB     ==== -->
+  <!-- ======================= -->
+
+</robot>
