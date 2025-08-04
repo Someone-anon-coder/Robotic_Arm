@@ -1,9 +1,5 @@
 # EEG-Controlled Remote Robotic Arm (Phase 1: Glove Control)
 
-A detailed README.md is the cornerstone of any successful project. This document serves as a comprehensive guide for developers, collaborators, and your future self.
-
----
-
 ## 1. Project Overview
 
 This project aims to develop an advanced control system for a high-degree-of-freedom (27-DOF) robotic arm. The ultimate vision is to control the arm using EEG (Electroencephalography) signals to interpret user intent. **Phase 1** establishes the core control system using a sensor-equipped glove as the primary input device.
