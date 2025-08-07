@@ -1,4 +1,0 @@
-# Lists all Python package dependencies (e.g., pybullet, gymnasium, pytorch).
-pybullet
-numpy
-matplotlib
