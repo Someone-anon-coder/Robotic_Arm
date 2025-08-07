@@ -10,17 +10,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from eeg_robotic_arm_project.configs import main_config as config
 from eeg_robotic_arm_project.simulation.sensor_handler import SensorHandler
 
-def main(mode="DIRECT"):
+def main():
     """
     Main function to run the interactive sensor test.
     """
     # --- Setup ---
-    if mode == "GUI":
-        client = p.connect(p.GUI)  # Use GUI mode for interactive testing
-    else:
-        # Use DIRECT mode for headless execution
-        client = p.connect(p.DIRECT) # Use DIRECT mode for headless execution
-    
+    # client = p.connect(p.DIRECT) # Use DIRECT mode for headless execution
+    client = p.connect(p.GUI)  # Use GUI mode for interactive testing
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
     p.setGravity(0, 0, -9.81)
     plane_id = p.loadURDF("plane.urdf")
@@ -37,6 +33,7 @@ def main(mode="DIRECT"):
     # Define a few key joints to control with sliders
     # We can add more here if needed
     controllable_joints = [
+        "wrist_flex_joint",
         "index_mcp_flex_joint",
         "middle_mcp_flex_joint",
         "ring_mcp_flex_joint",
@@ -64,22 +61,18 @@ def main(mode="DIRECT"):
     print("Running simulation in DIRECT mode to test sensor logic.")
     try:
         # Programmatically flex a joint to test the sensors
-        joints_to_flex = ["index_mcp_flex_joint", "middle_mcp_flex_joint", "ring_mcp_flex_joint", "pinky_mcp_flex_joint", "thumb_mcp_flex_joint"]
-        for joint_to_flex in joints_to_flex:
-            if joint_to_flex in joint_name_to_index:
-                joint_index = joint_name_to_index[joint_to_flex]
-                print(f"Flexing {joint_to_flex} to position 1.5")
-                
-                p.setJointMotorControl2(
-                    bodyUniqueId=glove_id,
-                    jointIndex=joint_index,
-                    controlMode=p.POSITION_CONTROL,
-                    targetPosition=1.5
-                )
-                print(f"Current position of {joint_to_flex}: {p.getJointState(glove_id, joint_index)[0]}")
+        joint_to_flex = "index_mcp_flex_joint"
+        if joint_to_flex in joint_name_to_index:
+            joint_index = joint_name_to_index[joint_to_flex]
+            p.setJointMotorControl2(
+                bodyUniqueId=glove_id,
+                jointIndex=joint_index,
+                controlMode=p.POSITION_CONTROL,
+                targetPosition=1.5
+            )
 
         # Settle the simulation
-        for _ in range(10000):
+        for _ in range(240):
             p.stepSimulation()
 
         # Get and print the final sensor data
