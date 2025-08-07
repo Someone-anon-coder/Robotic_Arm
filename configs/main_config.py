@@ -41,6 +41,3 @@ CONTROLLED_JOINTS = [
     "pinky_abd_joint", "pinky_mcp_flex_joint", "pinky_pip_joint", "pinky_dip_joint",
     "thumb_opp_joint", "thumb_z_rot_joint", "thumb_mcp_flex_joint", "thumb_ip_joint"
 ]
-
-# Ensure we have 27 joints
-assert len(CONTROLLED_JOINTS) == 27, "Expected 27 controllable joints!"

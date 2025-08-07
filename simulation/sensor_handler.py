@@ -91,6 +91,22 @@ class SensorHandler:
                 self.debug_lines.append(line_id)
 
         return readings
+    
+    # --- NEW: Method to get all sensor readings at once ---
+    def get_all_sensor_readings(self, visualize_flex=True):
+        """
+        Convenience method to get all sensor data from the handler.
+        
+        Args:
+            visualize_flex (bool): If True, flex sensor debug lines are drawn.
+            
+        Returns:
+            A tuple containing (flex_sensor_data, imu_data)
+        """
+        flex_data = self.get_flex_sensor_values(visualize=visualize_flex)
+        imu_data = self.get_imu_values()
+        return flex_data, imu_data
+    # --- END NEW ---
 
     def get_imu_values(self):
         """
