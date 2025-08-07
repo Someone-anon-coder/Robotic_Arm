@@ -1,0 +1,11 @@
+# Core dependencies for simulation and RL
+pybullet
+gymnasium
+numpy
+
+# Plotting for monitoring
+matplotlib
+
+# Deep learning framework (choose one, or add both if needed for experimentation)
+# torch
+# tensorflow
