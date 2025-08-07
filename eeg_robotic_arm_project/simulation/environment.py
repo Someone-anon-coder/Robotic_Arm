@@ -1,5 +1,6 @@
 # Will contain the main Gymnasium environment class (RoboticArmEnv) and visualizer.
 import pybullet as p
+import pybullet_data
 import time
 from types import ModuleType
 
@@ -16,6 +17,7 @@ class ArmVisualizer:
         self.client_id = p.connect(p.GUI)
         p.setGravity(0, 0, -9.8)
         p.setAdditionalSearchPath('eeg_robotic_arm_project/urdf')
+        p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
         # Set a nice camera view
         p.resetDebugVisualizerCamera(
