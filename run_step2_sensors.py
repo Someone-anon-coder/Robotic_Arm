@@ -87,6 +87,9 @@ def main():
         if env:
             env.close()
         print("--- Step 2 execution finished ---")
+
+        # Remove color codes for logging
+        log_info = log_info.replace('\033[95m', '').replace('\033[94m', '').replace('\033[96m', '').replace('\033[92m', '').replace('\033[0m', '')
         with open("sensor_log.txt", "w") as log_file:
             log_file.write(log_info)
     
