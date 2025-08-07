@@ -15,8 +15,7 @@ def main():
     Main function to run the interactive sensor test.
     """
     # --- Setup ---
-    # client = p.connect(p.DIRECT) # Use DIRECT mode for headless execution
-    client = p.connect(p.GUI)  # Use GUI mode for interactive testing
+    client = p.connect(p.DIRECT) # Use DIRECT mode for headless execution
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
     p.setGravity(0, 0, -9.81)
     plane_id = p.loadURDF("plane.urdf")
