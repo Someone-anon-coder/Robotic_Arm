@@ -34,9 +34,6 @@ def setup_simulation(config, connect_mode=p.GUI):
     # Make the glove semi-transparent for clear visualization
     for joint_index in range(p.getNumJoints(glove_id)):
         p.changeVisualShape(glove_id, joint_index, rgbaColor=[0.5, 0.5, 0.5, 0.5])
-    
-    # Change the base link transparency as well
-    p.changeVisualShape(glove_id, -1, rgbaColor=[0.5, 0.5, 0.5, 0.5])
 
     return physics_client, robot_id, glove_id
 
@@ -55,3 +52,24 @@ def print_joint_info(robot_id, robot_name="Robot"):
         
         print(f"  Index: {joint_index:<3} | Name: {joint_name:<25} | Type: {joint_type}")
     print("-" * 50)
+
+def get_joint_mappings(robot_id):
+    """
+    Creates mappings from joint name to index and vice-versa.
+    Filters out fixed joints.
+    """
+    name_to_index = {}
+    index_to_name = {}
+    num_joints = p.getNumJoints(robot_id)
+    
+    for i in range(num_joints):
+        info = p.getJointInfo(robot_id, i)
+        joint_name = info[1].decode('utf-8')
+        joint_type = info[2]
+        
+        # We only care about controllable (revolute) joints
+        if joint_type == p.JOINT_REVOLUTE:
+            name_to_index[joint_name] = i
+            index_to_name[i] = joint_name
+            
+    return name_to_index, index_to_name
