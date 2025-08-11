@@ -1,5 +1,0 @@
-pybullet
-gymnasium
-numpy
-stable-baselines3[extra]
-torch
