@@ -18,16 +18,16 @@ def setup_simulation(config, connect_mode=p.GUI):
     # Load the primary robotic arm
     robot_id = p.loadURDF(
         config.ROBOT_URDF_PATH,
-        config.ROBOT_START_POS,
-        config.ROBOT_START_ORN,
+        config.START_POS,
+        config.START_ORN,
         useFixedBase=True
     )
     
     # Load the "ghost" glove arm
     glove_id = p.loadURDF(
         config.GLOVE_URDF_PATH,
-        config.GLOVE_START_POS,
-        config.GLOVE_START_ORN,
+        config.START_POS,
+        config.START_ORN,
         useFixedBase=True
     )
     
