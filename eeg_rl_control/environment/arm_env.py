@@ -16,7 +16,8 @@ class ArmEnv(gym.Env):
 
         p.setGravity(0, 0, -9.81)
         datapath = pybullet_data.getDataPath()
-        p.setAdditionalSearchPath('urdf')
+        urdf_root = os.path.join(os.path.dirname(__file__), '..', 'urdf')
+        p.setAdditionalSearchPath(urdf_root)
         self.plane = p.loadURDF(os.path.join(datapath, "plane.urdf"))
 
         # Load arms
@@ -30,6 +31,12 @@ class ArmEnv(gym.Env):
 
         observation_dim = 108
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(observation_dim,), dtype=np.float32)
+
+        self.step_counter = 0
+        self.max_steps = 1000 # Max steps per episode
+        self.prev_pose_error = None
+
+        self.key_links = ['index_dist_link', 'middle_dist_link', 'ring_dist_link', 'pinky_dist_link', 'thumb_dist_link', 'hand_base_link']
 
         self.historical_imu_data = collections.deque(maxlen=10)
 
@@ -90,6 +97,7 @@ class ArmEnv(gym.Env):
 
     def _build_joint_maps(self):
         self.agent_joint_map = {p.getJointInfo(self.agent_arm, i)[1].decode('utf-8'): i for i in range(p.getNumJoints(self.agent_arm))}
+        self.agent_link_map = {p.getJointInfo(self.agent_arm, i)[12].decode('utf-8'): i for i in range(p.getNumJoints(self.agent_arm))}
         self.ghost_link_map = {p.getJointInfo(self.ghost_arm, i)[12].decode('utf-8'): i for i in range(p.getNumJoints(self.ghost_arm))}
         self.agent_controllable_joints = [v for k,v in self.agent_joint_map.items() if k.endswith('_joint')]
 
@@ -104,6 +112,7 @@ class ArmEnv(gym.Env):
 
     def reset(self, seed=None):
         super().reset(seed=seed)
+        self.step_counter = 0
 
         # Reset agent arm to zero pose
         for joint_index in self.agent_controllable_joints:
@@ -111,6 +120,7 @@ class ArmEnv(gym.Env):
 
         # Set random ghost pose
         self._set_random_ghost_pose()
+        self.prev_pose_error = self._get_pose_error()
 
         # Clear and pre-fill deque
         self.historical_imu_data.clear()
@@ -122,11 +132,67 @@ class ArmEnv(gym.Env):
 
         return observation, {}
 
+    def _get_pose_error(self):
+        total_error = 0.0
+        for link_name in self.key_links:
+            agent_link_index = self.agent_link_map[link_name]
+            ghost_link_index = self.ghost_link_map[link_name]
+
+            agent_link_state = p.getLinkState(self.agent_arm, agent_link_index)
+            ghost_link_state = p.getLinkState(self.ghost_arm, ghost_link_index)
+
+            agent_pos = np.array(agent_link_state[0])
+            ghost_pos = np.array(ghost_link_state[0])
+
+            error = np.linalg.norm(agent_pos - ghost_pos)
+            total_error += error
+        return total_error
+
+    def _calculate_reward(self):
+        pose_error = self._get_pose_error()
+
+        reward = -pose_error
+        is_success = False
+
+        if pose_error < 0.05:
+            reward += 500
+            is_success = True
+
+        reward -= 0.1
+
+        if self.prev_pose_error is not None and pose_error > self.prev_pose_error:
+            reward -= 0.5
+
+        self.prev_pose_error = pose_error
+        self.reward_info = {'is_success': is_success, 'pose_error': pose_error}
+
+        return reward
+
     def step(self, action):
-        pass
+        self.step_counter += 1
+        MAX_VELOCITY = 1.5 # rad/s
+
+        for i, joint_index in enumerate(self.agent_controllable_joints):
+            p.setJointMotorControl2(
+                bodyUniqueId=self.agent_arm,
+                jointIndex=joint_index,
+                controlMode=p.VELOCITY_CONTROL,
+                targetVelocity=action[i] * MAX_VELOCITY,
+                force=100
+            )
+
+        p.stepSimulation()
+
+        reward = self._calculate_reward()
+        observation = self._get_observation()
+
+        terminated = self.reward_info['is_success']
+        truncated = self.step_counter >= self.max_steps
+
+        return observation, reward, terminated, truncated, self.reward_info
 
     def render(self):
         pass
 
     def close(self):
-        p.disconnect(self.client)
+        p.disconnect()
