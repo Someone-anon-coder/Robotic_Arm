@@ -1,9 +1,8 @@
-# Training Hyperparameters
-TRAIN_CONFIG = {
+# SAC Model Configuration
+SAC_CONFIG = {
     "policy": "MlpPolicy",
-    "total_timesteps": 2_000_000,
     "learning_rate": 3e-4,
-    "buffer_size": 1_000_000,
+    "buffer_size": 200_000,
     "batch_size": 256,
     "gamma": 0.99,
     "tau": 0.005,
@@ -12,9 +11,14 @@ TRAIN_CONFIG = {
     "verbose": 1,
 }
 
+# Training Loop Configuration
+TRAIN_CONFIG = {
+    "total_timesteps": 500_000,
+}
+
 # Environment & Model Saving Configuration
 ENV_CONFIG = {
     "env_id": "ArmEnv-v0",
-    "render_mode": "human", # Set to 'none' for faster training
+    "render_mode": "none", # Set to 'none' for faster training
     "model_save_path": "./models/sac_arm_model.zip",
 }
