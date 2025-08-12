@@ -1,8 +1,8 @@
 import time
-from eeg_rl_control.environment.arm_env import ArmEnv
+from environment.arm_env import ArmEnv
 
 def main():
-    env = ArmEnv(render_mode='direct')
+    env = ArmEnv(render_mode='human')
     observation, info = env.reset()
     print(f"Observation shape: {observation.shape}")
     time.sleep(5)
