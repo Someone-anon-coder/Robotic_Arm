@@ -1,5 +1,5 @@
 import time
-from eeg_rl_control.environment.arm_env import ArmEnv
+from environment.arm_env import ArmEnv
 
 def main():
     env = ArmEnv(render_mode='direct')
