@@ -19,11 +19,9 @@ class ArmEnv(gym.Env):
         p.setAdditionalSearchPath('urdf')
         self.plane = p.loadURDF(os.path.join(datapath, "plane.urdf"))
 
-        urdf_path = "../urdf/"
-
         # Load arms
-        self.agent_arm = p.loadURDF(f"{urdf_path}robotic_arm.urdf", [0, 0, 0], useFixedBase=True)
-        self.ghost_arm = p.loadURDF(f"{urdf_path}glove.urdf", [0, 0, 0], useFixedBase=True)
+        self.agent_arm = p.loadURDF("robotic_arm.urdf", [0, 0, 0], useFixedBase=True)
+        self.ghost_arm = p.loadURDF("glove.urdf", [0, 0, 0], useFixedBase=True)
 
         self._build_joint_maps()
 

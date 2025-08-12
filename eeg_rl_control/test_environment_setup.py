@@ -20,8 +20,8 @@ ghost_start_orientation = p.getQuaternionFromEuler([0, 0, 0])
 
 # Construct absolute paths to URDF files
 script_dir = os.path.dirname(os.path.realpath(__file__))
-robotic_arm_path = os.path.join(script_dir, "../urdf/robotic_arm.urdf")
-glove_path = os.path.join(script_dir, "../urdf/glove.urdf")
+robotic_arm_path = os.path.join(script_dir, "/urdf/robotic_arm.urdf")
+glove_path = os.path.join(script_dir, "/urdf/glove.urdf")
 
 robotic_arm_id = p.loadURDF(robotic_arm_path, agent_start_pos, agent_start_orientation, useFixedBase=True)
 glove_id = p.loadURDF(glove_path, ghost_start_pos, ghost_start_orientation, useFixedBase=True)
