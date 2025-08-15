@@ -1,7 +1,7 @@
 import gymnasium as gym
-from eeg_rl_control.environment.arm_env import ArmEnv
-from eeg_rl_control.agents.hrl_agent.high_level import ManagerAgent
-from eeg_rl_control.agents.hrl_agent.low_level import ControllerAgent
+from environment.arm_env import ArmEnv
+from agents.hrl_agent.high_level import ManagerAgent
+from agents.hrl_agent.low_level import ControllerAgent
 
 def main():
     # Instantiate the environment with the HRL flag
