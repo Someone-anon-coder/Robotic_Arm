@@ -6,7 +6,7 @@ import pybullet_data
 import os
 
 class ArmEnv(gym.Env):
-    def __init__(self, render_mode='human'):
+    def __init__(self, render_mode='human', include_goal_in_obs=False):
         super().__init__()
         self.render_mode = render_mode
         if self.render_mode == 'human':
@@ -30,6 +30,8 @@ class ArmEnv(gym.Env):
         self.action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(27,), dtype=np.float32)
 
         observation_dim = 108
+        self.goal_dim = 7 if include_goal_in_obs else 0
+        observation_dim = 108 + self.goal_dim
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(observation_dim,), dtype=np.float32)
 
         self.step_counter = 0
