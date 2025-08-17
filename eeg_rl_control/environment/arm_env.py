@@ -6,6 +6,7 @@ import pybullet_data
 import os
 
 class ArmEnv(gym.Env):
+    SUCCESS_THRESHOLD = 0.05
     def __init__(self, render_mode='human', include_goal_in_obs=False):
         super().__init__()
         self.render_mode = render_mode
@@ -37,6 +38,9 @@ class ArmEnv(gym.Env):
         self.step_counter = 0
         self.max_steps = 1000 # Max steps per episode
         self.prev_pose_error = None
+        self.ghost_start_pose = None
+        self.ghost_target_pose = None
+        self.trajectory_length = 250
 
         self.key_links = ['index_dist_link', 'middle_dist_link', 'ring_dist_link', 'pinky_dist_link', 'thumb_dist_link', 'hand_base_link']
 
@@ -103,14 +107,26 @@ class ArmEnv(gym.Env):
         self.ghost_link_map = {p.getJointInfo(self.ghost_arm, i)[12].decode('utf-8'): i for i in range(p.getNumJoints(self.ghost_arm))}
         self.agent_controllable_joints = [v for k,v in self.agent_joint_map.items() if k.endswith('_joint')]
 
-    def _set_random_ghost_pose(self):
+    def _get_zero_pose(self):
+        return [0.0] * p.getNumJoints(self.ghost_arm)
+
+    def _get_random_pose(self):
+        random_pose = []
         for joint_index in range(p.getNumJoints(self.ghost_arm)):
             if p.getJointInfo(self.ghost_arm, joint_index)[2] != p.JOINT_FIXED:
                 joint_info = p.getJointInfo(self.ghost_arm, joint_index)
                 lower_limit = joint_info[8]
                 upper_limit = joint_info[9]
                 random_pos = np.random.uniform(lower_limit, upper_limit)
-                p.resetJointState(self.ghost_arm, joint_index, random_pos)
+                random_pose.append(random_pos)
+            else:
+                random_pose.append(0.0)
+        return random_pose
+
+    def _set_random_ghost_pose(self):
+        random_pose = self._get_random_pose()
+        for i, joint_pos in enumerate(random_pose):
+            p.resetJointState(self.ghost_arm, i, joint_pos)
 
     def reset(self, seed=None):
         super().reset(seed=seed)
@@ -120,8 +136,14 @@ class ArmEnv(gym.Env):
         for joint_index in self.agent_controllable_joints:
             p.resetJointState(self.agent_arm, joint_index, targetValue=0, targetVelocity=0)
 
-        # Set random ghost pose
-        self._set_random_ghost_pose()
+        # Define trajectory for ghost arm
+        self.ghost_start_pose = self._get_zero_pose()
+        self.ghost_target_pose = self._get_random_pose()
+
+        # Set ghost arm to start pose
+        for i, joint_pos in enumerate(self.ghost_start_pose):
+            p.resetJointState(self.ghost_arm, i, joint_pos)
+
         self.prev_pose_error = self._get_pose_error()
 
         # Clear and pre-fill deque
@@ -156,7 +178,8 @@ class ArmEnv(gym.Env):
         reward = -pose_error
         is_success = False
 
-        if pose_error < 0.05:
+        SUCCESS_THRESHOLD = 0.05
+        if self.step_counter >= self.trajectory_length and pose_error < SUCCESS_THRESHOLD:
             reward += 500
             is_success = True
 
@@ -171,6 +194,16 @@ class ArmEnv(gym.Env):
         return reward
 
     def step(self, action):
+        # Update ghost arm position
+        if self.step_counter < self.trajectory_length:
+            alpha = self.step_counter / self.trajectory_length
+            for i in range(p.getNumJoints(self.ghost_arm)):
+                if p.getJointInfo(self.ghost_arm, i)[2] != p.JOINT_FIXED:
+                    start_angle = self.ghost_start_pose[i]
+                    target_angle = self.ghost_target_pose[i]
+                    current_angle = (1 - alpha) * start_angle + alpha * target_angle
+                    p.resetJointState(self.ghost_arm, i, current_angle)
+
         self.step_counter += 1
         MAX_VELOCITY = 1.5 # rad/s
 

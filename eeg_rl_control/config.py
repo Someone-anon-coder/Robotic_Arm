@@ -25,10 +25,9 @@ ENV_CONFIG = {
 
 # Hierarchical RL Configuration
 HRL_CONFIG = {
-    "total_training_steps": 3_000_000,
-    "manager_action_frequency": 10,  # Manager acts every 10 steps
-    "log_path": "./logs/hrl/",
-    "model_save_path": "./models/hrl/",
+    "total_timesteps": 2_000_000,
+    "manager_freq": 10, # Manager acts every 10 steps
+    "log_interval": 2048, # Log to tensorboard every 2048 steps
 }
 
 MANAGER_CONFIG = {
@@ -38,7 +37,7 @@ MANAGER_CONFIG = {
     "batch_size": 256,
     "gamma": 0.99, # Discount factor for future extrinsic rewards
     "policy_kwargs": dict(net_arch=[256, 256]),
-    "tensorboard_log": HRL_CONFIG["log_path"] + "manager/",
+    "tensorboard_log": "./logs/hrl/manager/",
     "verbose": 1,
 }
 
@@ -49,6 +48,6 @@ CONTROLLER_CONFIG = {
     "batch_size": 256,
     "gamma": 0.95, # Discount factor for future intrinsic rewards
     "policy_kwargs": dict(net_arch=[256, 256]),
-    "tensorboard_log": HRL_CONFIG["log_path"] + "controller/",
+    "tensorboard_log": "./logs/hrl/controller/",
     "verbose": 0, # Quieter logging for the inner loop agent
 }
