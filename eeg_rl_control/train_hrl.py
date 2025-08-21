@@ -1,20 +1,27 @@
 import os
 import numpy as np
 import torch
-from torch.utils.tensorboard import SummaryWriter
 import pybullet as p
+from stable_baselines3.common.logger import configure
 
-from eeg_rl_control.environment.arm_env import ArmEnv
-from eeg_rl_control.agents.hrl_agent.high_level import ManagerAgent
-from eeg_rl_control.agents.hrl_agent.low_level import ControllerAgent
-from eeg_rl_control.config import HRL_CONFIG, MANAGER_CONFIG, CONTROLLER_CONFIG
+from environment.arm_env import ArmEnv
+from agents.hrl_agent.high_level import ManagerAgent
+from agents.hrl_agent.low_level import ControllerAgent
+from config import HRL_CONFIG, MANAGER_CONFIG, CONTROLLER_CONFIG
 
 def main():
     # --- Initialization ---
-    writer = SummaryWriter(log_dir=os.path.join("./logs/hrl", "run"))
+    log_path = os.path.join("./logs/hrl", "run")
+    # The logger can be configured to output to console, tensorboard, etc.
+    # "stdout" for console, "tensorboard" for tensorboard logging.
+    sb3_logger = configure(log_path, ["stdout", "tensorboard"])
+
     env = ArmEnv(include_goal_in_obs=True, render_mode='none')
     manager = ManagerAgent(env, MANAGER_CONFIG)
     controller = ControllerAgent(env, CONTROLLER_CONFIG)
+
+    manager.model.set_logger(sb3_logger)
+    controller.model.set_logger(sb3_logger)
 
     global_step = 0
     episode_num = 0
@@ -81,9 +88,11 @@ def main():
             if (global_step + 1) % HRL_CONFIG['log_interval'] == 0 and episode_steps > 0:
                 avg_ext_reward = episode_extrinsic_reward / episode_steps
                 avg_int_reward = episode_intrinsic_reward / episode_steps
-                writer.add_scalar('hrl/extrinsic_reward', avg_ext_reward, global_step)
-                writer.add_scalar('hrl/intrinsic_reward', avg_int_reward, global_step)
-                print(f"Step: {global_step}, Ep: {episode_num}, AvgExtRew: {avg_ext_reward:.2f}, AvgIntRew: {avg_int_reward:.2f}")
+                # The SB3 logger will handle printing to stdout and writing to TensorBoard
+                manager.model.logger.record('hrl/extrinsic_reward', avg_ext_reward)
+                manager.model.logger.record('hrl/intrinsic_reward', avg_int_reward)
+                manager.model.logger.record('hrl/episode', episode_num)
+                manager.model.logger.dump(step=global_step)
                 episode_extrinsic_reward = 0
                 episode_intrinsic_reward = 0
                 episode_steps = 0
