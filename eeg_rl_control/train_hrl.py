@@ -5,10 +5,10 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.logger import configure
 from stable_baselines3.common.vec_env import DummyVecEnv
 
-from eeg_rl_control.environment.arm_env import ArmEnv
-from eeg_rl_control.agents.hrl_agent.high_level import ManagerAgent
-from eeg_rl_control.agents.hrl_agent.low_level import ControllerAgent
-from eeg_rl_control.config_hrl import MANAGER_CONFIG, CONTROLLER_CONFIG, HRL_TRAIN_CONFIG
+from environment.arm_env import ArmEnv
+from agents.hrl_agent.high_level import ManagerAgent
+from agents.hrl_agent.low_level import ControllerAgent
+from config_hrl import MANAGER_CONFIG, CONTROLLER_CONFIG, HRL_TRAIN_CONFIG
 
 class TensorboardCallback(BaseCallback):
     def __init__(self, verbose=0):
@@ -31,9 +31,15 @@ def get_expert_action(env):
     """
     A simple PID-like expert that tries to match the ghost's joint positions.
     """
-    ghost_joint_states = p.getJointStates(env.ghost_arm, range(p.getNumJoints(env.ghost_arm)))
+    num_joints = p.getNumJoints(env.ghost_arm)
+    joint_indices = range(num_joints)
+    ghost_joint_states = p.getJointStates(env.ghost_arm, joint_indices)
     # We only care about the controllable joints of the agent
-    ghost_joint_positions = [state[0] for state in ghost_joint_states if p.getJointInfo(env.ghost_arm, state[0])[2] != p.JOINT_FIXED]
+    ghost_joint_positions = [
+        ghost_joint_states[i][0]
+        for i in joint_indices
+        if p.getJointInfo(env.ghost_arm, i)[2] != p.JOINT_FIXED
+    ]
 
 
     agent_joint_states = p.getJointStates(env.agent_arm, env.agent_controllable_joints)
