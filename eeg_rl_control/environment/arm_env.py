@@ -40,7 +40,7 @@ class ArmEnv(gym.Env):
         self.prev_pose_error = None
         self.ghost_start_pose = None
         self.ghost_target_pose = None
-        self.trajectory_length = 250
+        self.ghost_interpolation_speed = 0.05
 
         self.key_links = ['index_dist_link', 'middle_dist_link', 'ring_dist_link', 'pinky_dist_link', 'thumb_dist_link', 'hand_base_link']
 
@@ -136,13 +136,13 @@ class ArmEnv(gym.Env):
         for joint_index in self.agent_controllable_joints:
             p.resetJointState(self.agent_arm, joint_index, targetValue=0, targetVelocity=0)
 
-        # Define trajectory for ghost arm
-        self.ghost_start_pose = self._get_zero_pose()
-        self.ghost_target_pose = self._get_random_pose()
-
-        # Set ghost arm to start pose
-        for i, joint_pos in enumerate(self.ghost_start_pose):
+        # Set the ghost arm to the default "pledge" pose
+        pledge_pose = self._get_zero_pose()
+        for i, joint_pos in enumerate(pledge_pose):
             p.resetJointState(self.ghost_arm, i, joint_pos)
+
+        # Generate a random valid pose and store it as the target
+        self.ghost_target_pose = self._get_random_pose()
 
         self.prev_pose_error = self._get_pose_error()
 
@@ -178,8 +178,7 @@ class ArmEnv(gym.Env):
         reward = -pose_error
         is_success = False
 
-        SUCCESS_THRESHOLD = 0.05
-        if self.step_counter >= self.trajectory_length and pose_error < SUCCESS_THRESHOLD:
+        if self.step_counter > 50 and pose_error < self.SUCCESS_THRESHOLD:
             reward += 500
             is_success = True
 
@@ -193,17 +192,19 @@ class ArmEnv(gym.Env):
 
         return reward
 
-    def step(self, action):
-        # Update ghost arm position
-        if self.step_counter < self.trajectory_length:
-            alpha = self.step_counter / self.trajectory_length
-            for i in range(p.getNumJoints(self.ghost_arm)):
-                if p.getJointInfo(self.ghost_arm, i)[2] != p.JOINT_FIXED:
-                    start_angle = self.ghost_start_pose[i]
-                    target_angle = self.ghost_target_pose[i]
-                    current_angle = (1 - alpha) * start_angle + alpha * target_angle
-                    p.resetJointState(self.ghost_arm, i, current_angle)
+    def _update_ghost_pose(self):
+        current_joint_states = p.getJointStates(self.ghost_arm, range(p.getNumJoints(self.ghost_arm)))
+        current_joint_positions = [state[0] for state in current_joint_states]
 
+        for i in range(p.getNumJoints(self.ghost_arm)):
+            if p.getJointInfo(self.ghost_arm, i)[2] != p.JOINT_FIXED:
+                current_pos = current_joint_positions[i]
+                target_pos = self.ghost_target_pose[i]
+                new_pos = current_pos + (target_pos - current_pos) * self.ghost_interpolation_speed
+                p.resetJointState(self.ghost_arm, i, new_pos)
+
+    def step(self, action):
+        self._update_ghost_pose()
         self.step_counter += 1
         MAX_VELOCITY = 1.5 # rad/s
 
