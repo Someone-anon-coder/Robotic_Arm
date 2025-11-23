@@ -1,0 +1,20 @@
+imu:
+  actual: 'hand_base_link'
+  reference: 'base_link'
+
+flex_sensors:
+  index:
+    start: 'index_flexed_tracker_link'
+    end: 'index_tracker_link'
+  middle:
+    start: 'middle_flexed_tracker_link'
+    end: 'middle_tracker_link'
+  ring:
+    start: 'ring_flexed_tracker_link'
+    end: 'ring_tracker_link'
+  pinky:
+    start: 'pinky_flexed_tracker_link'
+    end: 'pinky_tracker_link'
+  thumb:
+    start: 'thumb_flexed_tracker_link'
+    end: 'thumb_tracker_link'
