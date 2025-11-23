@@ -50,6 +50,12 @@ class SAC(object):
         self.policy_optim = Adam(self.policy.parameters(), lr=lr)
         self.critic_optim = Adam(self.critic.parameters(), lr=lr)
 
+    def get_q_values(self, state, action):
+        state = torch.FloatTensor(state).unsqueeze(0)
+        action = torch.FloatTensor(action).unsqueeze(0)
+        q1, q2 = self.critic(state, action)
+        return torch.min(q1, q2).detach().cpu().numpy()[0]
+
     def select_action(self, state, evaluate=False):
         state = torch.FloatTensor(state).unsqueeze(0)
         if not evaluate:
