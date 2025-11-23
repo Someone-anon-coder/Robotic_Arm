@@ -20,7 +20,6 @@ class BiomimeticArmEnv:
         p.loadURDF("plane.urdf")
 
         # 3. Load Models
-        # Get the absolute path to the urdf files
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         ghost_urdf_path = os.path.join(project_root, self.config['urdf_paths']['ghost'])
         robot_urdf_path = os.path.join(project_root, self.config['urdf_paths']['robot'])
@@ -43,8 +42,8 @@ class BiomimeticArmEnv:
         sensor_config_path = os.path.join(config_dir, 'sensor_config.yaml')
         with open(sensor_config_path, 'r') as f:
             sensor_config = yaml.safe_load(f)
+        
         self.sensor_manager = SensorManager(self.ghost_id, self.robot_id, sensor_config)
-
 
         self.sim_step_count = 0
         self.debug_text_id = -1
@@ -57,27 +56,26 @@ class BiomimeticArmEnv:
             joint_type = info[2]
             if joint_type == p.JOINT_REVOLUTE or joint_type == p.JOINT_PRISMATIC:
                 target_dict[joint_name] = i
+                # Activate motor for robot (force=0 allows control later)
+                p.setJointMotorControl2(body_id, i, controlMode=p.VELOCITY_CONTROL, force=0)
 
     def reset(self):
-        # For now, just reset the joint states to their initial positions (0)
         for joint_index in self.joint_map_robot.values():
             p.resetJointState(self.robot_id, joint_index, 0)
         for joint_index in self.joint_map_ghost.values():
             p.resetJointState(self.ghost_id, joint_index, 0)
         self.sim_step_count = 0
-        # Reset the debug text as well
         if self.debug_text_id != -1:
             p.removeUserDebugItem(self.debug_text_id)
         self.debug_text_id = -1
 
-
-    def step(self, joint_targets: dict[str, float]):
-        # Update Ghost Arm
+    def step(self, joint_targets: dict):
+        # Update Ghost Arm (Kinematic)
         for joint_name, target_angle in joint_targets.items():
             if joint_name in self.joint_map_ghost:
                 p.resetJointState(self.ghost_id, self.joint_map_ghost[joint_name], target_angle)
 
-        # Update Robotic Arm
+        # Update Robotic Arm (Dynamic PID)
         pid_params = self.config['motor_pid']
         for joint_name, target_angle in joint_targets.items():
             if joint_name in self.joint_map_robot:
@@ -91,17 +89,13 @@ class BiomimeticArmEnv:
                     velocityGain=pid_params['velocity_gain']
                 )
 
-        # Visual Feedback
+        # Visual Debug
         if self.debug_text_id != -1:
             p.removeUserDebugItem(self.debug_text_id)
-
-        # Get robot's base position to display text above it
         robot_pos, _ = p.getBasePositionAndOrientation(self.robot_id)
-        text_pos = [robot_pos[0], robot_pos[1], robot_pos[2] + 0.5] # 0.5m above the base
-
         self.debug_text_id = p.addUserDebugText(
             f"Sim Step: {self.sim_step_count}",
-            text_pos,
+            [robot_pos[0], robot_pos[1], robot_pos[2] + 0.5],
             textColorRGB=[1, 0, 0],
             textSize=1.5
         )
@@ -109,6 +103,4 @@ class BiomimeticArmEnv:
         p.stepSimulation()
         self.sim_step_count += 1
         
-        # Compute and return observations
-        observation = self.sensor_manager.compute_observation()
-        return observation
+        return self.sensor_manager.compute_observation()
