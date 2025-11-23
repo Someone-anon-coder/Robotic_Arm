@@ -2,6 +2,7 @@ import pybullet as p
 import pybullet_data
 import yaml
 import os
+from simulation.virtual_sensors import SensorManager
 
 class BiomimeticArmEnv:
     def __init__(self, config_path):
@@ -36,6 +37,14 @@ class BiomimeticArmEnv:
         self.joint_map_robot = {}
         self._map_joints(self.ghost_id, self.joint_map_ghost)
         self._map_joints(self.robot_id, self.joint_map_robot)
+        
+        # 5. Initialize Sensor Manager
+        config_dir = os.path.dirname(config_path)
+        sensor_config_path = os.path.join(config_dir, 'sensor_config.yaml')
+        with open(sensor_config_path, 'r') as f:
+            sensor_config = yaml.safe_load(f)
+        self.sensor_manager = SensorManager(self.ghost_id, self.robot_id, sensor_config)
+
 
         self.sim_step_count = 0
         self.debug_text_id = -1
@@ -99,3 +108,7 @@ class BiomimeticArmEnv:
 
         p.stepSimulation()
         self.sim_step_count += 1
+        
+        # Compute and return observations
+        observation = self.sensor_manager.compute_observation()
+        return observation
