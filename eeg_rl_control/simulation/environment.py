@@ -9,6 +9,7 @@ class BiomimeticArmEnv:
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
 
+        self.p = p
         # 1. Initialize PyBullet
         self.physics_client = p.connect(p.GUI)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
