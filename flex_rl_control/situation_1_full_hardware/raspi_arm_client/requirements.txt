@@ -1,0 +1,6 @@
+# File: flex_rl_control/situation_1_full_hardware/raspi_arm_client/requirements.txt
+
+adafruit-circuitpython-pca9685
+adafruit-circuitpython-motor
+RPi.GPIO
+board
